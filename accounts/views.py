@@ -5,7 +5,7 @@ from vendor.forms import VendorForm
 from .forms import UserForm
 from .models import User,UserProfile
 from django.contrib import messages, auth
-from .utils import detectUser
+from .utils import detectUser, send_verification_email
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from django.core.exceptions import PermissionDenied
@@ -53,6 +53,10 @@ def registerUser(request):
             )
             user.role= User.CUSTOMER
             user.save()
+             # Send verification email
+            #mail_subject = 'Please activate your account'
+            #email_template = 'accounts/emails/account_verification_email.html'
+            send_verification_email(request, user)
             messages.success(request,'Your account has been registered successfully')
 
             return redirect('registerUser')
@@ -87,6 +91,10 @@ def registerVendor(request):
             user_profile = UserProfile.objects.get(user=user)
             vendor.user_profile = user_profile
             vendor.save()
+             # Send verification email
+            #mail_subject = 'Please activate your account'
+            #email_template = 'accounts/emails/account_verification_email.html'
+            send_verification_email(request, user)
             messages.success(request,'your account has been register successfully please wait for the approval')
             return redirect('registerVendor')
 
@@ -102,6 +110,11 @@ def registerVendor(request):
         'v_form': v_form,
     }
     return render(request,'accounts/registerVendor.html',context)
+
+
+def activate(request,uidb64, token):
+    #Activate this user by setting the is_activate status to True
+    return
 
 def login(request):
     if request.user.is_authenticated:
