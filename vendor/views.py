@@ -36,3 +36,8 @@ def vprofile(request):
         'vendor': vendor,
     }
     return render(request, 'vendor/vprofile.html', context)
+
+@login_required(login_url='login')
+@user_passes_test(check_role_vendor)
+def menu_builder(request):
+    return render(request, 'vendor/menu_builder.html')
