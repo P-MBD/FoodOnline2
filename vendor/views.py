@@ -63,17 +63,32 @@ class menu_builder(ListView):
 
 
 
-@login_required(login_url='login')
-@user_passes_test(check_role_vendor)
-def fooditems_by_category(request, pk=None):
-    vendor = get_vendor(request)
-    category = get_object_or_404(Category, pk=pk)
-    fooditems = FoodItem.objects.filter(vendor=vendor, category=category)
-    context = {
-        'fooditems': fooditems,
-        'category': category,
-    }
-    return render(request, 'vendor/fooditems_by_category.html', context)
+# @login_required(login_url='login')
+# @user_passes_test(check_role_vendor)
+# def fooditems_by_category(request, pk=None):
+#     vendor = get_vendor(request)
+#     category = get_object_or_404(Category, pk=pk)
+#     fooditems = FoodItem.objects.filter(vendor=vendor, category=category)
+#     context = {
+#         'fooditems': fooditems,
+#         'category': category,
+#     }
+#     return render(request, 'vendor/fooditems_by_category.html', context)
+
+
+class fooditems_by_category(ListView):
+    model = Category
+    template_name= 'vendor/fooditems_by_category.html'
+    def get_queryset(self):
+        self.vendor = get_object_or_404(Vendor, user=self.request.user)
+        self.category = Category.objects.filter(vendor=self.vendor)
+        return Category.objects.filter(vendor=self.vendor)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["category"] = Category.objects.filter(vendor=self.vendor)
+        #context["fooditems"] = FoodItem.objects.filter(vendor=self.vendor, category=self.category)
+        
+        return context
 
 def add_category(request):
     if request.method == 'POST':
