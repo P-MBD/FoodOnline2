@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import check_role_vendor
 from menu.forms import CategoryForm
 from django.template.defaultfilters import slugify
+from django.views.generic import ListView
 
 def get_vendor(request):
     vendor= Vendor.objects.get(user=request.user)
@@ -42,15 +43,25 @@ def vprofile(request):
     }
     return render(request, 'vendor/vprofile.html', context)
 
-@login_required(login_url='login')
-@user_passes_test(check_role_vendor)
-def menu_builder(request):
-    vendor = get_vendor(request)
-    categories = Category.objects.filter(vendor=vendor)
-    context={
-        'categories' : categories
-    }
-    return render(request, 'vendor/menu_builder.html',context)
+#@login_required(login_url='login')
+#@user_passes_test(check_role_vendor)
+# def menu_builder(request):
+#     vendor = get_vendor(request)
+#     categories = Category.objects.filter(vendor=vendor)
+#     context={
+#          'categories' : categories
+#          }
+#     return render(request, 'vendor/menu_builder.html',context)
+
+class menu_builder(ListView):
+    template_name = 'vendor/menu_builder.html'
+    model = Category
+    context_object_name = "categories"
+    def get_queryset(self):
+        self.vendor = get_object_or_404(Vendor, user=self.request.user)
+        return Category.objects.filter(vendor=self.vendor)
+
+
 
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor)
