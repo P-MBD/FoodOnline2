@@ -9,11 +9,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import check_role_vendor
 from menu.forms import CategoryForm
 from django.template.defaultfilters import slugify
-from django.views.generic import ListView
+from django.views.generic import ListView,DetailView
+from django.views.generic.edit import CreateView,UpdateView,DeleteView
+from django.urls import reverse_lazy
 
-def get_vendor(request):
-    vendor= Vendor.objects.get(user=request.user)
-    return vendor
+# def get_vendor(request):
+#     vendor= Vendor.objects.get(user=request.user)
+#     return vendor
 # Create your views here.
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor)
@@ -76,66 +78,100 @@ class menu_builder(ListView):
 #     return render(request, 'vendor/fooditems_by_category.html', context)
 
 
-class fooditems_by_category(ListView):
+class fooditems_by_category(DetailView):
     model = Category
+    slug_field = 'pk'
     template_name= 'vendor/fooditems_by_category.html'
     def get_queryset(self):
         self.vendor = get_object_or_404(Vendor, user=self.request.user)
         self.category = Category.objects.filter(vendor=self.vendor)
         return Category.objects.filter(vendor=self.vendor)
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["category"] = Category.objects.filter(vendor=self.vendor)
-        #context["fooditems"] = FoodItem.objects.filter(vendor=self.vendor, category=self.category)
-        
+        context = super(fooditems_by_category, self).get_context_data(**kwargs)
+        context['category']  = Category.objects.filter(vendor=self.vendor)
+        context['fooditems']  = FoodItem.objects.filter(vendor=self.vendor,category=pk)       
         return context
 
-def add_category(request):
-    if request.method == 'POST':
+class add_category(CreateView):
+    model=Category
+    success_url = reverse_lazy("menu_builder")
+    def get(self, request, *args, **kwargs):
+        context = {'form': CategoryForm()}
+        return render(request, 'vendor/add_category.html', context)
+
+    def post(self, request, *args, **kwargs):
         form = CategoryForm(request.POST)
         if form.is_valid():
             category_name = form.cleaned_data['category_name']
             category = form.save(commit=False)
-            category.vendor = get_vendor(request)
+            category.vendor = get_object_or_404(Vendor, user=self.request.user)
             category.slug = slugify(category_name)
             form.save()
             messages.success(request, 'Category added successfully!')
-            return redirect('menu_builder')
+            return redirect(self.success_url)
         else:
-            print(form.errors)
-
-    else:
-        form = CategoryForm()
-    context = {
-        'form': form,
-    }
-    return render(request, 'vendor/add_category.html', context)
+              print(form.errors)
+        return render(request, 'vendor/add_category.html', {'form': form})
 
 
-def edit_category(request, pk=None):
-    category = get_object_or_404(Category, pk=pk)
-    if request.method == 'POST':
-        form = CategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            category_name = form.cleaned_data['category_name']
-            category = form.save(commit=False)
-            category.vendor = get_vendor(request)
-            category.slug = slugify(category_name)
-            form.save()
-            messages.success(request, 'Category updated successfully!')
-            return redirect('menu_builder')
-        else:
-            print(form.errors)
+# def add_category(request):
+#     if request.method == 'POST':
+#         form = CategoryForm(request.POST)
+#         if form.is_valid():
+#             category_name = form.cleaned_data['category_name']
+#             category = form.save(commit=False)
+#             category.vendor = get_vendor(request)
+#             category.slug = slugify(category_name)
+#             form.save()
+#             messages.success(request, 'Category added successfully!')
+#             return redirect('menu_builder')
+#         else:
+#             print(form.errors)
 
-    else:
-        form = CategoryForm(instance=category)
-    context = {
-        'form': form,
-        'category': category,
-    }
-    return render(request, 'vendor/edit_category.html', context)
-def delete_category(request, pk=None):
-    category = get_object_or_404(Category, pk=pk)
-    category.delete()
-    messages.success(request, 'Category has been deleted successfully!')
-    return redirect('menu_builder')
+#     else:
+#         form = CategoryForm()
+#     context = {
+#         'form': form,
+#     }
+#     return render(request, 'vendor/add_category.html', context)
+
+
+# def edit_category(request, pk=None):
+#     category = get_object_or_404(Category, pk=pk)
+#     if request.method == 'POST':
+#         form = CategoryForm(request.POST, instance=category)
+#         if form.is_valid():
+#             category_name = form.cleaned_data['category_name']
+#             category = form.save(commit=False)
+#             category.vendor = get_vendor(request)
+#             category.slug = slugify(category_name)
+#             form.save()
+#             messages.success(request, 'Category updated successfully!')
+#             return redirect('menu_builder')
+#         else:
+#             print(form.errors)
+
+#     else:
+#         form = CategoryForm(instance=category)
+#     context = {
+#         'form': form,
+#         'category': category,
+#     }
+#     return render(request, 'vendor/edit_category.html', context)
+
+class edit_category(UpdateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'vendor/edit_category.html'
+    success_url = reverse_lazy("menu_builder")
+
+
+# def delete_category(request, pk=None):
+#     category = get_object_or_404(Category, pk=pk)
+#     category.delete()
+#     messages.success(request, 'Category has been deleted successfully!')
+#     return redirect('menu_builder')
+
+class delete_category(DeleteView):
+    model = Category
+    success_url = reverse_lazy("menu_builder")
