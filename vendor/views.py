@@ -7,7 +7,7 @@ from django.contrib import messages
 from menu.models import Category, FoodItem
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.views import check_role_vendor
-from menu.forms import CategoryForm
+from menu.forms import CategoryForm,FoodItemForm
 from django.template.defaultfilters import slugify
 from django.views.generic import ListView,DetailView
 from django.views.generic.edit import CreateView,UpdateView,DeleteView
@@ -82,14 +82,15 @@ class fooditems_by_category(DetailView):
     model = Category
     slug_field = 'pk'
     template_name= 'vendor/fooditems_by_category.html'
+
     def get_queryset(self):
         self.vendor = get_object_or_404(Vendor, user=self.request.user)
-        self.category = Category.objects.filter(vendor=self.vendor)
+        self.category = Category.objects.filter(vendor=self.vendor,pk=self.kwargs['pk'])
         return Category.objects.filter(vendor=self.vendor)
     def get_context_data(self, **kwargs):
         context = super(fooditems_by_category, self).get_context_data(**kwargs)
-        context['category']  = Category.objects.filter(vendor=self.vendor)
-        context['fooditems']  = FoodItem.objects.filter(vendor=self.vendor,category=pk)       
+        context['category']  = Category.objects.filter(vendor=self.vendor,pk=self.kwargs['pk'])
+        context['fooditems']  = FoodItem.objects.filter(vendor=self.vendor,category=self.kwargs['pk'])       
         return context
 
 class add_category(CreateView):
@@ -105,7 +106,7 @@ class add_category(CreateView):
             category_name = form.cleaned_data['category_name']
             category = form.save(commit=False)
             category.vendor = get_object_or_404(Vendor, user=self.request.user)
-            category.slug = slugify(category_name)
+            category.slug = slugify(category_name)+'-'+str(category.id)
             form.save()
             messages.success(request, 'Category added successfully!')
             return redirect(self.success_url)
@@ -175,3 +176,40 @@ class edit_category(UpdateView):
 class delete_category(DeleteView):
     model = Category
     success_url = reverse_lazy("menu_builder")
+
+
+class add_food(CreateView):
+    model=FoodItem
+    success_url = reverse_lazy("menu_builder")
+    def get(self, request, *args, **kwargs):
+        context = {'form': FoodItemForm()}
+        return render(request, 'vendor/add_food.html', context)
+
+    def post(self, request, *args, **kwargs):
+        form = FoodItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            food_title = form.cleaned_data['food_title']
+            food = form.save(commit=False)
+            food.vendor = get_object_or_404(Vendor, user=self.request.user)
+            food.slug = slugify(food_title)
+            form.save()
+            messages.success(request, 'Food added successfully!')
+            return redirect(self.success_url)
+        else:
+              print(form.errors)
+        return render(request, 'vendor/add_food.html', {'form': form})
+
+
+class edit_food(UpdateView):
+    model = FoodItem
+    form_class = FoodItemForm
+    context_object_name = 'food'
+    template_name = 'vendor/edit_food.html'
+    success_url = reverse_lazy("menu_builder")
+   
+class delete_food(DeleteView):
+    model=FoodItem
+    success_url = reverse_lazy("menu_builder")
+
+
+
