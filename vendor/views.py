@@ -179,19 +179,18 @@ class delete_category(DeleteView):
 
 
 class add_food(CreateView):
+    form_class = FoodItemForm
     model=FoodItem
+    template_name = 'vendor/add_food.html'
     success_url = reverse_lazy("menu_builder")
     def get_form(self, *args, **kwargs):
         form = super().get_form(*args, **kwargs)
         self.vendor=get_object_or_404(Vendor, user=self.request.user)
-        form.fields['category'].queryset = Category.objects.filter(vendor= vendor)
-        #return form
-        context = {'form': FoodItemForm()}
-        return render(request, 'vendor/add_food.html', context)
-
-    def get(self, request, *args, **kwargs):
-        context = {'form': FoodItemForm()}
-        return render(request, 'vendor/add_food.html', context)
+        form.fields['category'].queryset = Category.objects.filter(vendor= self.vendor)
+        return form
+    # def get(self, request, *args, **kwargs):
+    #     context = {'form': FoodItemForm()}
+    #     return render(request, 'vendor/add_food.html', context)
     
     def post(self, request, *args, **kwargs):
         form = FoodItemForm(request.POST, request.FILES)
@@ -214,15 +213,6 @@ class edit_food(UpdateView):
     context_object_name = 'food'
     template_name = 'vendor/edit_food.html'
     success_url = reverse_lazy("menu_builder")
-    fields = ['category',]
-    def get_form(self, *args, **kwargs):
-        form = super().get_form(*args, **kwargs)
-        self.vendor=get_object_or_404(Vendor, user=self.request.user)
-        
-        form.fields['category'].queryset = Category.objects.filter(
-             vendor= vendor
-        )
-        return form
    
 class delete_food(DeleteView):
     model=FoodItem
