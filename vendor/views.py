@@ -181,10 +181,18 @@ class delete_category(DeleteView):
 class add_food(CreateView):
     model=FoodItem
     success_url = reverse_lazy("menu_builder")
-    def get(self, request, *args, **kwargs):
+    def get_form(self, *args, **kwargs):
+        form = super().get_form(*args, **kwargs)
+        self.vendor=get_object_or_404(Vendor, user=self.request.user)
+        form.fields['category'].queryset = Category.objects.filter(vendor= vendor)
+        #return form
         context = {'form': FoodItemForm()}
         return render(request, 'vendor/add_food.html', context)
 
+    def get(self, request, *args, **kwargs):
+        context = {'form': FoodItemForm()}
+        return render(request, 'vendor/add_food.html', context)
+    
     def post(self, request, *args, **kwargs):
         form = FoodItemForm(request.POST, request.FILES)
         if form.is_valid():
@@ -212,7 +220,7 @@ class edit_food(UpdateView):
         self.vendor=get_object_or_404(Vendor, user=self.request.user)
         
         form.fields['category'].queryset = Category.objects.filter(
-            vendor= vendor
+             vendor= vendor
         )
         return form
    
