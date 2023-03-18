@@ -85,11 +85,11 @@ class fooditems_by_category(DetailView):
 
     def get_queryset(self):
         self.vendor = get_object_or_404(Vendor, user=self.request.user)
-        self.category = Category.objects.filter(vendor=self.vendor,pk=self.kwargs['pk'])
-        return Category.objects.filter(vendor=self.vendor)
+        self.category = Category.objects.get(vendor=self.vendor,pk=self.kwargs['pk'])
+        return Category.objects.filter(vendor=self.vendor,pk=self.kwargs['pk'])
     def get_context_data(self, **kwargs):
         context = super(fooditems_by_category, self).get_context_data(**kwargs)
-        context['category']  = Category.objects.filter(vendor=self.vendor,pk=self.kwargs['pk'])
+        context['category']  = get_object_or_404(Category, vendor=self.vendor, pk=self.kwargs['pk'])
         context['fooditems']  = FoodItem.objects.filter(vendor=self.vendor,category=self.kwargs['pk'])       
         return context
 
