@@ -55,11 +55,8 @@ class AddToCart(View):
                  #print(fooditem)
                 # Check if the user has already added that food to the cart
                  try:
-                     print('ya Mahdi')
-                     print(self.request.user)
+                    
                      chkCart = get_object_or_404(Cart, user=self.request.user, fooditem=fooditem)
-                     print('ya ali')
-                     print(chkCart)
                       # Increase the cart quantity
                      chkCart.quantity += 1
                      chkCart.save()
