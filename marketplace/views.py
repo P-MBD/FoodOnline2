@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404,render
+from django.views import View
 from django.views.generic.base import TemplateView
 from marketplace.models import Cart
 from vendor.models import Vendor
@@ -40,9 +41,38 @@ class VendorDetail(DetailView):
         return context
 
 
-def add_to_cart(request, food_id):
-   return HttpResponse('Testing')
+# def add_to_cart(request, food_id):
+#    return HttpResponse('Testing')
 
+class AddToCart(View):
+      def get(self, request, *args, **kwargs):
+        # Perform io-blocking view logic using await, sleep for example.
+        if request.user.is_authenticated:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Check if the food item exists
+              try:
+                 fooditem = get_object_or_404(FoodItem, id=self.kwargs['food_id'])
+                 #print(fooditem)
+                # Check if the user has already added that food to the cart
+                 try:
+                     print('ya Mahdi')
+                     print(self.request.user)
+                     chkCart = get_object_or_404(Cart, user=self.request.user, fooditem=fooditem)
+                     print('ya ali')
+                     print(chkCart)
+                      # Increase the cart quantity
+                     chkCart.quantity += 1
+                     chkCart.save()
+                     return JsonResponse({'status': 'Success', 'message': 'Increased the card quantity'})
+                 except:
+                     chkCart = Cart.objects.create(user=request.user, fooditem=fooditem, quantity=1)
+                     return JsonResponse({'status': 'Success', 'message': 'Added the food to the cart'})
+              except:
+                 return JsonResponse({'status': 'Failed', 'message': 'This food does not exist!'})
+            else:
+               return JsonResponse({'staus':'failed', 'message': 'Invalid request'})
+        else:
+         return JsonResponse({'staus':'failed', 'message': 'please login to continue'})
 
 
 # # inside CreateView class

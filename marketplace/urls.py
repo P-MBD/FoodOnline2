@@ -4,7 +4,8 @@ urlpatterns=[
     path('',views.MarketPlace.as_view(), name='marketplace'),
     path('<slug:vendor_slug>/',views.VendorDetail.as_view(), name="vendor_detail"),
   # ADD TO CART
-    path('add_to_cart/<int:food_id>/', views.add_to_cart, name='add_to_cart'),
+    #path('add_to_cart/<int:food_id>/', views.add_to_cart, name='add_to_cart'),
+     path('add_to_cart/<int:food_id>/', views.AddToCart.as_view(), name='add_to_cart'),
    
     
 ]
