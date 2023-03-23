@@ -1,9 +1,13 @@
 from django.shortcuts import get_object_or_404,render
 from django.views.generic.base import TemplateView
+from marketplace.models import Cart
 from vendor.models import Vendor
 from menu.models import Category,FoodItem
-from django.views.generic import DetailView
+
+from django.views.generic import DetailView,CreateView
 from django.db.models import Prefetch
+from django.http import JsonResponse, HttpResponse
+
 # Create your views here.
 class MarketPlace(TemplateView):
      template_name = "marketplace/listings.html"
@@ -35,3 +39,40 @@ class VendorDetail(DetailView):
        
         return context
 
+
+def add_to_cart(request, food_id):
+   return HttpResponse('Testing')
+
+
+
+# # inside CreateView class
+# class AddToCart(CreateView):
+#    model=Cart
+#    def get_form_kwargs(self):
+#     kwargs = super(AddToCart, self).get_form_kwargs()
+#     kwargs['food_id'] = self.kwargs.get('Food_Id')
+#     return kwargs
+
+#    def render_to_response(self, context, **response_kwargs):
+    # """ Allow AJAX requests to be handled more gracefully """
+    # if self.request.user.is_authenticated:
+    #     if self.request.is_ajax():
+    #         try:
+    #             fooditem = FoodItem.objects.get(id=self.kwargs.get('Food_Id'))
+    #             # Check if the user has already added that food to the cart
+    #             try:
+    #                 chkCart = Cart.objects.get(user=self.request.user, fooditem=fooditem)
+    #                 # Increase the cart quantity
+    #                 chkCart.quantity += 1
+    #                 chkCart.save()
+    #                 return JsonResponse({'status': 'Success', 'message': 'Increased the cart quantity', 'cart_counter': get_cart_counter(request), 'qty': chkCart.quantity, 'cart_amount': get_cart_amounts(request)})
+    #             except:
+    #                 chkCart = Cart.objects.create(user=self.request.user, fooditem=fooditem, quantity=1)
+    #                 return JsonResponse({'status': 'Success', 'message': 'Added the food to the cart', 'cart_counter': get_cart_counter(request), 'qty': chkCart.quantity, 'cart_amount': get_cart_amounts(request)})
+    #         except:
+    #             return JsonResponse({'status': 'Failed', 'message': 'This food does not exist!'})
+    #     else:
+    #         return JsonResponse({'status': 'Failed', 'message': 'Invalid request!'})
+
+    # else:
+    #   return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
