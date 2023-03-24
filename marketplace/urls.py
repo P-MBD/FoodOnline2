@@ -6,6 +6,9 @@ urlpatterns=[
   # ADD TO CART
     #path('add_to_cart/<int:food_id>/', views.add_to_cart, name='add_to_cart'),
      path('add_to_cart/<int:food_id>/', views.AddToCart.as_view(), name='add_to_cart'),
+     #Decrease To CARt
+     path('decrease_cart/<int:food_id>/',views.DecreaseCart.as_view(), name='decrease_cart'),
+
    
     
 ]

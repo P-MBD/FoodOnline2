@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404,render
 from django.views import View
 from django.views.generic.base import TemplateView
+from accounts.models import User
 from marketplace.context_processors import get_cart_counter
 from marketplace.models import Cart
 from vendor.models import Vendor
@@ -36,8 +37,9 @@ class VendorDetail(DetailView):
          'fooditems',
          queryset=FoodItem.objects.filter(is_available=True)
 
-        ))
-        context['cart_items']=Cart.objects.filter(user=self.request.user)
+         ))
+        if self.request.user.is_authenticated:
+            context['cart_items']=Cart.objects.filter(user=self.request.user)
 
        
         return context
@@ -62,18 +64,44 @@ class AddToCart(View):
                       # Increase the cart quantity
                      chkCart.quantity += 1
                      chkCart.save()
-                     return JsonResponse({'status': 'Success', 'message': 'Increased the card quantity','cart_counter': get_cart_counter(request),'qty': chkCart.quantity})
+                     return JsonResponse({'status': 'Success', 'message': 'Increased the cart quantity', 'cart_counter': get_cart_counter(self.request), 'qty': chkCart.quantity})
                  except:
-                     chkCart = Cart.objects.create(user=request.user, fooditem=fooditem, quantity=1)
-                     return JsonResponse({'status': 'Success', 'message': 'Added the food to the cart','cart_counter': get_cart_counter(request), 'qty': chkCart.quantity})
+                    chkCart = Cart.objects.create(user=request.user, fooditem=fooditem, quantity=1)
+                    return JsonResponse({'status': 'Success', 'message': 'Added the food to the cart', 'cart_counter': get_cart_counter(self.request), 'qty': chkCart.quantity})
               except:
                  return JsonResponse({'status': 'Failed', 'message': 'This food does not exist!'})
             else:
-               return JsonResponse({'staus':'failed', 'message': 'Invalid request'})
+              return JsonResponse({'status': 'Failed', 'message': 'Invalid request!'})
+
         else:
-         return JsonResponse({'staus':'failed', 'message': 'please login to continue'})
+          return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
 
+class DecreaseCart(View):
+    def get(self, request, *args, **kwargs):
+        # Perform io-blocking view logic using await, sleep for example.
+        if request.user.is_authenticated:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Check if the food item exists
+              try:
+                 fooditem = get_object_or_404(FoodItem, id=self.kwargs['food_id'])
+                 #print(fooditem)
+                # Check if the user has already added that food to the cart
+                 try:
+                    
+                     chkCart = get_object_or_404(Cart, user=self.request.user, fooditem=fooditem)
+                      # Increase the cart quantity
+                     chkCart.quantity -= 1
+                     chkCart.save()
+                     return JsonResponse({'status': 'Success', 'cart_counter': get_cart_counter(self.request), 'qty': chkCart.quantity})
+                 except:
+                    return JsonResponse({'status': 'Failed', 'message': 'You do not have this item in your cart!'})
+              except:
+                return JsonResponse({'status': 'Failed', 'message': 'This food does not exist!'})
+            else:
+             return JsonResponse({'status': 'Failed', 'message': 'Invalid request!'})
 
+        else:
+          return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
 # # inside CreateView class
 # class AddToCart(CreateView):
 #    model=Cart
