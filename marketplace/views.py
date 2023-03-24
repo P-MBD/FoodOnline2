@@ -36,6 +36,7 @@ class VendorDetail(DetailView):
          queryset=FoodItem.objects.filter(is_available=True)
 
         ))
+        context['cart_items']=Cart.objects.filter(user=self.request.user)
 
        
         return context
