@@ -135,4 +135,9 @@ class DecreaseCart(View):
     #   return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
 
 def cart(request):
-    return render(request,'marketplace/cart.html')
+  cart_items=Cart.objects.filter(user=request.user)
+  print('ya ali',cart_items)
+  context={
+    'cart_items':cart_items,
+  }
+  return render(request,'marketplace/cart.html',context)
