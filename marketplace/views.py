@@ -6,11 +6,10 @@ from marketplace.context_processors import get_cart_counter
 from marketplace.models import Cart
 from vendor.models import Vendor
 from menu.models import Category,FoodItem
-
-from django.views.generic import DetailView,CreateView
+from django.views.generic import DetailView,CreateView,DeleteView
 from django.db.models import Prefetch
 from django.http import JsonResponse, HttpResponse
-
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 class MarketPlace(TemplateView):
      template_name = "marketplace/listings.html"
@@ -134,6 +133,8 @@ class DecreaseCart(View):
     # else:
     #   return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
 
+
+@login_required(login_url='login')
 def cart(request):
   cart_items=Cart.objects.filter(user=request.user)
   print('ya ali',cart_items)
@@ -141,3 +142,23 @@ def cart(request):
     'cart_items':cart_items,
   }
   return render(request,'marketplace/cart.html',context)
+
+def delete_cart(request,cart_id):
+        if request.user.is_authenticated:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Check if the food item exists
+              try:
+                 cart_item = Cart.objects.get(user=request.user,id=cart_id)
+                 
+                 if cart_item:
+          
+                      cart_item.delete()
+                      return JsonResponse({'status': 'Success', 'message': 'Cart Item has been deleted!','cart_counter': get_cart_counter(request)})
+              except:
+                return JsonResponse({'status': 'Failed', 'message': 'Cart Item does not exist!'})
+            else:
+             return JsonResponse({'status': 'Failed', 'message': 'Invalid request!'})
+
+        else:
+           return JsonResponse({'status': 'login_required', 'message': 'Please login to continue'})
+      
